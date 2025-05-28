@@ -1,0 +1,278 @@
+// XBXM Scripts UI - Fancy LED-Style Draggable Panel with Anti-AFK & Socials + Centered Warning
+(function () {
+  const styles = `
+    @keyframes rainbowGlow {
+      0% { border-color: red; box-shadow: 0 0 10px red; }
+      16% { border-color: orange; box-shadow: 0 0 10px orange; }
+      33% { border-color: yellow; box-shadow: 0 0 10px yellow; }
+      50% { border-color: green; box-shadow: 0 0 10px green; }
+      66% { border-color: blue; box-shadow: 0 0 10px blue; }
+      83% { border-color: indigo; box-shadow: 0 0 10px indigo; }
+      100% { border-color: violet; box-shadow: 0 0 10px violet; }
+    }
+
+    .xbxm-ui, .xbxm-socials-ui {
+      position: fixed;
+      top: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #111, #222);
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 15px;
+      border-radius: 15px;
+      z-index: 9999;
+      width: 400px;
+      animation: rainbowGlow 5s linear infinite;
+      box-sizing: border-box;
+    }
+    .xbxm-header {
+      background: linear-gradient(45deg, #0ff, #00f);
+      color: white;
+      padding: 12px;
+      font-weight: bold;
+      cursor: move;
+      text-align: center;
+      border-radius: 12px 12px 0 0;
+      position: relative;
+      font-size: 20px;
+      user-select: none;
+    }
+    .xbxm-body {
+      padding: 15px;
+      font-size: 16px;
+    }
+    .xbxm-button {
+      display: block;
+      width: 100%;
+      margin: 12px 0;
+      padding: 12px;
+      background: linear-gradient(45deg, #00f, #0ff);
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 7px;
+      font-weight: bold;
+      font-size: 16px;
+      user-select: none;
+      transition: background 0.3s ease;
+    }
+    .xbxm-button:active {
+      background: linear-gradient(45deg, #0055ff, #00aaaa);
+    }
+    .xbxm-min-btn, .xbxm-close-btn {
+      position: absolute;
+      top: 10px;
+      padding: 4px 9px;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      font-size: 14px;
+    }
+    .xbxm-min-btn {
+      right: 50px;
+      background: #0ff;
+      color: #004d4d;
+    }
+    .xbxm-close-btn {
+      right: 10px;
+      background: #f55;
+      color: #7a0000;
+    }
+    .hidden { display: none; }
+    .xbxm-link {
+      display: block;
+      margin: 8px 0;
+      color: #0ff;
+      text-decoration: none;
+      font-size: 15px;
+    }
+    .xbxm-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Warning UI */
+    .xbxm-warning {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      color: red;
+      text-align: center;
+      padding: 30px 30px 40px 30px;
+      border-radius: 15px;
+      font-size: 18px;
+      width: 480px;
+      box-sizing: border-box;
+      z-index: 10000;
+      user-select: none;
+      box-shadow: 0 0 15px red;
+    }
+    .xbxm-warning h1 {
+      font-size: 36px;
+      font-weight: bold;
+      margin: 0 0 20px 0;
+      text-shadow: 0 0 5px red;
+    }
+    .xbxm-warning p {
+      margin: 0 0 25px 0;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+    .xbxm-warning button {
+      padding: 14px 24px;
+      font-weight: bold;
+      background: #d00;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 0 8px #a00;
+      transition: background 0.3s ease;
+    }
+    .xbxm-warning button:hover {
+      background: #ff3333;
+    }
+  `;
+
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
+
+  const warning = document.createElement("div");
+  warning.className = "xbxm-warning";
+  warning.innerHTML = `
+    <h1>WARNING</h1>
+    <p>Please know that you are using this script at your own risk.<br>
+    I am not responsible for any causes for YOUR account.<br>
+    Please do NOT abuse this script or I’ll have to take it down.<br>
+    This script was made for Education purposes.</p>
+    <button id="agreeBtn">I agree to these terms.</button>
+  `;
+  document.body.appendChild(warning);
+
+  document.getElementById("agreeBtn").onclick = () => {
+    warning.remove();
+    initUI();
+  };
+
+  function initUI() {
+    const ui = document.createElement("div");
+    ui.className = "xbxm-ui";
+    ui.innerHTML = `
+      <div class="xbxm-header" id="xbxm-header">
+        XBXM Scripts
+        <button class="xbxm-min-btn" title="Minimize">_</button>
+        <button class="xbxm-close-btn" title="Close">X</button>
+      </div>
+      <div class="xbxm-body">
+        <button id="antiAfkBtn" class="xbxm-button" style="background: linear-gradient(45deg, #f00, #a00);">Anti-AFK</button>
+        <button id="socialsBtn" class="xbxm-button">My Socials</button>
+      </div>
+    `;
+    document.body.appendChild(ui);
+
+    let isMinimized = false;
+    ui.querySelector(".xbxm-min-btn").onclick = () => {
+      const body = ui.querySelector(".xbxm-body");
+      body.classList.toggle("hidden");
+      isMinimized = !isMinimized;
+    };
+    ui.querySelector(".xbxm-close-btn").onclick = () => {
+      ui.remove();
+      if (socialsUI) socialsUI.remove();
+      stopAntiAfk();
+    };
+
+    makeDraggable(ui, "#xbxm-header");
+
+    let antiAfkInterval = null;
+    const antiAfkBtn = ui.querySelector("#antiAfkBtn");
+
+    // Click simulation: click at center of window every 30 seconds to avoid AFK disconnect
+    function doAntiAfkClick() {
+      const x = window.innerWidth / 2;
+      const y = window.innerHeight / 2;
+      const evtDown = new MouseEvent("mousedown", { bubbles: true, clientX: x, clientY: y });
+      const evtUp = new MouseEvent("mouseup", { bubbles: true, clientX: x, clientY: y });
+      document.elementFromPoint(x, y).dispatchEvent(evtDown);
+      document.elementFromPoint(x, y).dispatchEvent(evtUp);
+    }
+
+    function startAntiAfk() {
+      if (antiAfkInterval) return;
+      doAntiAfkClick(); // immediate first click
+      antiAfkInterval = setInterval(doAntiAfkClick, 30000);
+      antiAfkBtn.style.background = "linear-gradient(45deg, #0f0, #0a0)";
+      antiAfkBtn.textContent = "Anti-AFK (ON)";
+    }
+
+    function stopAntiAfk() {
+      if (!antiAfkInterval) return;
+      clearInterval(antiAfkInterval);
+      antiAfkInterval = null;
+      antiAfkBtn.style.background = "linear-gradient(45deg, #f00, #a00)";
+      antiAfkBtn.textContent = "Anti-AFK (OFF)";
+    }
+
+    antiAfkBtn.onclick = () => {
+      if (antiAfkInterval) {
+        stopAntiAfk();
+      } else {
+        startAntiAfk();
+      }
+    };
+
+    // Socials UI
+    const socialsUI = document.createElement("div");
+    socialsUI.className = "xbxm-socials-ui hidden";
+    socialsUI.style.top = "250px";
+    socialsUI.innerHTML = `
+      <div class="xbxm-header" id="xbxm-socials-header">
+        My Socials
+        <button class="xbxm-min-btn" title="Minimize">_</button>
+      </div>
+      <div class="xbxm-body">
+        <a class="xbxm-link" href="https://www.youtube.com/@OGWatermelonx1" target="_blank" rel="noreferrer">YouTube</a>
+        <a class="xbxm-link" href="https://www.reddit.com/user/Icy-Bike-8265/" target="_blank" rel="noreferrer">Reddit</a>
+        <a class="xbxm-link" href="https://github.com/WaterDrinker-IMP" target="_blank" rel="noreferrer">GitHub</a>
+      </div>
+    `;
+    document.body.appendChild(socialsUI);
+    makeDraggable(socialsUI, "#xbxm-socials-header");
+
+    document.getElementById("socialsBtn").onclick = () => {
+      socialsUI.classList.toggle("hidden");
+    };
+    socialsUI.querySelector(".xbxm-min-btn").onclick = () => {
+      socialsUI.querySelector(".xbxm-body").classList.toggle("hidden");
+    };
+  }
+
+  function makeDraggable(el, headerSelector) {
+    const header = el.querySelector(headerSelector);
+    let offsetX = 0, offsetY = 0, isDragging = false;
+
+    header.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      offsetX = e.clientX - el.offsetLeft;
+      offsetY = e.clientY - el.offsetTop;
+      e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (isDragging) {
+        el.style.left = e.clientX - offsetX + "px";
+        el.style.top = e.clientY - offsetY + "px";
+      }
+    });
+
+    document.addEventListener("mouseup", () => {
+      isDragging = false;
+    });
+  }
+})();
